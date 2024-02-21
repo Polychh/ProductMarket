@@ -9,8 +9,13 @@ import UIKit
 import Combine
 
 final class ProductViewController: UIViewController {
+    @Published var countProdFromCell: Int = .init()
+    @Published var countProdFromDetail: Int = .init()
+    
     private var viewModel: ProductViewModel
     private var cancellables = Set<AnyCancellable>()
+    
+    private var detailVC = ProductCardDetailVC()
     
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -55,7 +60,7 @@ final class ProductViewController: UIViewController {
         super.viewWillAppear(animated)
         tabBarController?.tabBar.isHidden = true
     }
-    
+
     //MARK: - UpdateProduct
     private func upDateteCategory(){
         viewModel.$dataProduct
@@ -80,6 +85,19 @@ final class ProductViewController: UIViewController {
                 setupCollectionViewWhenEmpty()
             }
             .store(in: &cancellables)
+        
+        detailVC.$countProdDetailVC
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] value  in
+                guard let self = self else {return}
+                print("get value")
+                self.countProdFromDetail = value
+                if let cell = self.collectionView.cellForItem(at: detailVC.productIndexPath) as? PMProductCell {
+                    cell.countProdCell = self.countProdFromDetail
+                }
+            }
+            .store(in: &cancellables)
+        
     }
 }
 //MARK: - SetUp UI Elements
@@ -93,13 +111,14 @@ private extension ProductViewController{
     
     func signOnSegmentController(){
         segmentControl.$category
+            .dropFirst()
             .receive(on: DispatchQueue.main)
             .assign(to: \.viewModel.categoryChoosed, on: self)
             .store(in: &cancellables)
-        segmentControl.$isChangedSeg
-            .receive(on: DispatchQueue.main)
-            .assign(to: \.viewModel.isChanged, on: self)
-            .store(in: &cancellables)
+//        segmentControl.$isChangedSeg
+//            .receive(on: DispatchQueue.main)
+//            .assign(to: \.viewModel.isChanged, on: self)
+//            .store(in: &cancellables)
     }
     
     func setUpSearchController(){
@@ -189,33 +208,38 @@ extension ProductViewController: UICollectionViewDelegate, UICollectionViewDataS
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PMProductCell.resuseID, for: indexPath) as? PMProductCell else {
-            return UICollectionViewCell()
-        }
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PMProductCell.resuseID, for: indexPath) as? PMProductCell else { return UICollectionViewCell() }
         let data = filter ? viewModel.filterProduct[indexPath.row] : viewModel.dataProduct[indexPath.row]
-        let imageTitle = filter ? viewModel.filterProduct[indexPath.row].title : viewModel.dataProduct[indexPath.row].title
-        if let image = viewModel.imageResProd[imageTitle]{
-            cell.configProductImage(image: UIImage(data: image))
-        }
-        cell.configProductLabel(productText: data.title)
-        cell.configPricetLabel(price: data.price)
+        
+        cell.id = data.id
+        print("cellID \(cell.id)")
+        
+        //cell.countProdCell = countProdFromDetail
+        print("cell count Prod from detail \(cell.countProdCell)"  )
+        
+        cell.$countProdCell
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] value in
+                guard let self = self else {return}
+                self.countProdFromCell = value
+                print("cell id \(cell.id) Value cell \(self.countProdFromCell)")
+                print("------")
+            }
+            .store(in: &cell.cancellables)
+        
+       
+        cell.configCell(productText: data.title, price: data.price, image: viewModel.imageResProd[data.title])
         return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        self.searchController.dismiss(animated: false) {
-            let detailVC = ProductCardDetailVC()
-            let data = self.filter ? self.viewModel.filterProduct[indexPath.row] : self.viewModel.dataProduct[indexPath.row]
-            let imageTitle = self.filter ? self.viewModel.filterProduct[indexPath.row].title : self.viewModel.dataProduct[indexPath.row].title
-            if let image = self.viewModel.imageResProd[imageTitle]{
-                detailVC.configProductImage(image: UIImage(data: image))
-            }
-            detailVC.configProductLabel(productText: data.title)
-            detailVC.configPricetLabel(price: data.price)
-            detailVC.configDescriptLabel(descText: data.description)
-            detailVC.modalPresentationStyle = .overCurrentContext
-            self.present(detailVC, animated: true)
-          }
+        let data = self.filter ? self.viewModel.filterProduct[indexPath.row] : self.viewModel.dataProduct[indexPath.row]
+        
+        detailVC.countProdDetailVC = countProdFromCell
+        detailVC.productIndexPath = indexPath
+        detailVC.configDetailCardVC(productText: data.title, price: data.price, descText: data.description, image: viewModel.imageResProd[data.title])
+        detailVC.modalPresentationStyle = .overFullScreen
+        self.present(detailVC, animated: true)
     }
 }
 

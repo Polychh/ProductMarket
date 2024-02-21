@@ -10,7 +10,7 @@ import UIKit
 final class PMSegmentController: UIView, ObservableObject {
     
     var chooseCategory: String = ""
-    @Published var isChangedSeg = false
+    //@Published var isChangedSeg = false
     @Published var category: String = ""
     private let color = #colorLiteral(red: 0.8571347594, green: 0.8542680144, blue: 0.8668256402, alpha: 1)
     
@@ -81,7 +81,7 @@ final class PMSegmentController: UIView, ObservableObject {
             if let button = $0 as? UIButton {
                 if button.tag == tag {
                     if let text = button.titleLabel?.text{
-                        isChangedSeg = true
+                        //isChangedSeg = true
                         category = text
                     }
                     button.backgroundColor = Const.colorGreen

@@ -19,7 +19,7 @@ final class ProductViewModel: ObservableObject{
    
     @Published var categoryChoosed: String = ""
     
-    var isChanged: Bool = false
+    //var isChanged: Bool = false
     var categoryName: String
     
     private var cancellables = Set<AnyCancellable>()
@@ -28,18 +28,22 @@ final class ProductViewModel: ObservableObject{
         self.networkManager = networkManager
         self.categoryName = categotyName
         fetchProductCategoryData(category: categoryName)
+        print("init \(categotyName)")
         updateRequest()
     }
     
     private func updateRequest(){
         $categoryChoosed
+            .dropFirst()
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
+            .sink { [weak self] choosedCat in
                 guard let self = self else {return}
-                if categoryChoosed == "Все" && isChanged{
+                if categoryChoosed == "Все"{
+                    print("category Все")
                     fetchAllProducts()
-                }else if isChanged{
-                    fetchProductCategoryData(category: categoryChoosed)
+                }else {
+                    print("category \(choosedCat)")
+                    fetchProductCategoryData(category: choosedCat)
                 }
             }
             .store(in: &cancellables)

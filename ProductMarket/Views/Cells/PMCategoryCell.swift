@@ -56,13 +56,18 @@ final class PMCategoryCell: UICollectionViewCell {
 
 //MARK: - Configure Cell UI
 extension PMCategoryCell{
-    func configCategoryLabel(categoryLabelText: String){
+    func configCell(categoryLabelText: String, image: Data?){
+        configCategoryLabel(categoryLabelText: categoryLabelText)
+        configCategoryImage(image: image)
+    }
+    
+    private func configCategoryLabel(categoryLabelText: String){
         categoryLabel.text = categoryLabelText
     }
     
-    func configCategoryImage(image: UIImage?){
+    private func configCategoryImage(image: Data?){
         if let image = image{
-            categoryImage.image = image
+            categoryImage.image = UIImage(data: image)
         } else{
             categoryImage.image = UIImage(named: "defaultCategoryImage")
         }

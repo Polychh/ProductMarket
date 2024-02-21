@@ -79,15 +79,9 @@ extension MainViewController: UICollectionViewDelegate, UICollectionViewDataSour
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PMCategoryCell.resuseID, for: indexPath) as? PMCategoryCell else {
-            return UICollectionViewCell()
-        }
-        cell.configCategoryLabel(categoryLabelText: viewModel.data[indexPath.row].name)
-        let name = viewModel.data[indexPath.row].name
-        if let nameData = viewModel.imageResult[name]{
-            cell.configCategoryImage(image: UIImage(data: nameData))
-        }
-        
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PMCategoryCell.resuseID, for: indexPath) as? PMCategoryCell else { return UICollectionViewCell() }
+        let data = viewModel.data[indexPath.row]
+        cell.configCell(categoryLabelText: data.name, image: viewModel.imageResult[data.name])
         return cell
     }
     
